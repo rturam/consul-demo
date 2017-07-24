@@ -1,0 +1,42 @@
+version: '3'
+services:
+  consul:
+    image: "gliderlabs/consul-server"
+    command: "-advertise=192.168.65.1 -server -bootstrap"
+    hostname: consul
+    container_name: consul
+    ports:
+     - "8400:8400"
+     - "8500:8500"
+     - "53:8600/udp"
+  registrator:
+    image: "gliderlabs/registrator"
+    command: "-ip 127.0.0.1 consul://192.168.65.1:8500"
+    container_name: registrator
+    hostname: registrator
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    depends_on:
+      - consul
+  db:
+    image: "mysql:latest"
+    container_name: mysql
+    volumes:
+      - ./data:/var/lib/mysql:rw
+      - ./messages.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    environment:
+       MYSQL_ROOT_PASSWORD: root
+       MYSQL_ROOT_HOST: "%"
+    depends_on:
+      - registrator
+    ports:
+      - 3306:3306
+  web:
+    build: .
+    depends_on:
+      - db
+      - consul
+    ports:
+     - "8080:8080"
+    volumes:
+      - .:/code

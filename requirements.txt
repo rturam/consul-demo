@@ -1,0 +1,5 @@
+flask
+mysql-connector-python-rf
+simplejson
+requests
+MySQL-python
