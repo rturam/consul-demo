@@ -1,42 +1,53 @@
-version: '3'
+version: '2'
 services:
   consul:
     image: "gliderlabs/consul-server"
-    command: "-advertise=192.168.65.1 -server -bootstrap"
+    command: "-server -bootstrap"
     hostname: consul
     container_name: consul
     ports:
      - "8400:8400"
      - "8500:8500"
-     - "53:8600/udp"
+     - "172.17.0.1:53:8600/udp"
+    networks:
+     - my_net
   registrator:
     image: "gliderlabs/registrator"
-    command: "-ip 127.0.0.1 consul://192.168.65.1:8500"
+    command: "-internal consul://172.17.0.1:8500"
     container_name: registrator
     hostname: registrator
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock
     depends_on:
       - consul
+    networks:
+     - my_net
   db:
-    image: "mysql:latest"
+    image: "mysql:5.5"
     container_name: mysql
+    hostname: mysql
     volumes:
-      - ./data:/var/lib/mysql:rw
-      - ./messages.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+#      - ./data:/var/lib/mysql
+       - ./mydb:/docker-entrypoint-initdb.d
     environment:
        MYSQL_ROOT_PASSWORD: root
-       MYSQL_ROOT_HOST: "%"
     depends_on:
       - registrator
     ports:
       - 3306:3306
+    networks:
+     - my_net
   web:
     build: .
     depends_on:
       - db
       - consul
     ports:
-     - "8080:8080"
+     - 8080:8080
     volumes:
       - .:/code
+    networks:
+     - my_net
+networks:
+  my_net:
+    driver: bridge
