@@ -15,3 +15,6 @@ Go to browser run http://127.0.0.1:8080/ , It will fetch the greeting message fr
 Ex. Hello World!
 
 The DB is loaded with MySQL dump file when docker is starting.
+
+This code created and tested on Amazon Linux only. If you are using other OS specially OSX or windows, you have to 
+make changes in docker file for consul registration IPS.
